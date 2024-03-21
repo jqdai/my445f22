@@ -291,19 +291,23 @@ class Trie {
     if (key.empty()) return false;
     size_t keyLen = key.size();
     size_t index = 0;
+    latch_.WLock();
     std::unique_ptr<TrieNode>* currentNode = &root_;
     while (index < keyLen) {
       if (index == keyLen - 1) {
         if (currentNode->get()->HasChild(key[index])) {
           std::unique_ptr<TrieNode>* nextNode = currentNode->get()->GetChildNode(key[index]);
           if ((*nextNode)->IsEndNode()) {
+            latch_.WUnlock();
             return false;
           }
           auto newNode = std::make_unique<TrieNodeWithValue<T>>(std::move(*(*nextNode)), value);
           // nextNode->reset(newNode);
+          latch_.WUnlock();
           return true;
         } else {
           currentNode = currentNode->get()->InsertChildNode(key[index], std::move(std::make_unique<TrieNodeWithValue<T>>(key[index], value)));
+          latch_.WUnlock();
           return true;
         }
       } else {
@@ -315,6 +319,7 @@ class Trie {
         index ++;
       }
     }
+    latch_.WUnlock();
     return true;
   }
 
@@ -340,16 +345,19 @@ class Trie {
     if (key.empty()) return false;
     size_t keyLen = key.size();
     size_t index = 0;
+    latch_.WLock();
     std::unique_ptr<TrieNode>* currentNode = &root_;
     std::vector<std::unique_ptr<TrieNode>*> nodes;
     while (index < keyLen) {
       nodes.emplace_back(currentNode);
       if (!currentNode->get()->HasChild(key[index])) {
+        latch_.WUnlock();
         return false;
       }
       auto child = currentNode->get()->GetChildNode(key[index]);
       if (index == keyLen - 1) {
         if (!child->get()->IsEndNode()) {
+        latch_.WUnlock();
           return false;
         }
         child->get()->SetEndNode(false);
@@ -366,6 +374,7 @@ class Trie {
         break;
       }
     }
+    latch_.WUnlock();
     return true;
   }
 
@@ -395,6 +404,7 @@ class Trie {
     }
     size_t keyLen = key.size();
     size_t index = 0;
+    latch_.RLock();
     std::unique_ptr<TrieNode>* currentNode = &root_;
     while (index < keyLen) {
       if (index == keyLen - 1) {
@@ -404,21 +414,25 @@ class Trie {
             auto tr = dynamic_cast<TrieNodeWithValue<T> *>(child->get());
             if (tr != nullptr) {
               *success = true;
+              latch_.RUnlock();
               return tr->GetValue();
             }
           }
         }
         *success = false;
+        latch_.RUnlock();
         return {};
       } else if (currentNode->get()->HasChild(key[index])) {
         currentNode = currentNode->get()->GetChildNode(key[index]);
         index ++;
       } else {
         *success = false;
+        latch_.RUnlock();
         return {};
       }
     }
     *success = false;
+    latch_.RUnlock();
     return {};
   }
 };
