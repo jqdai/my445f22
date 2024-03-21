@@ -23,7 +23,9 @@ namespace bustub {
 
 template <typename K, typename V>
 ExtendibleHashTable<K, V>::ExtendibleHashTable(size_t bucket_size)
-    : global_depth_(0), bucket_size_(bucket_size), num_buckets_(1) {}
+    : global_depth_(0), bucket_size_(bucket_size), num_buckets_(1) {
+  dir_.emplcae_back(std::make_shared<Bucket>(bucket_size, 0));
+}
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::IndexOf(const K &key) -> size_t {
@@ -66,12 +68,30 @@ auto ExtendibleHashTable<K, V>::GetNumBucketsInternal() const -> int {
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Find(const K &key, V &value) -> bool {
-  UNREACHABLE("not implemented");
+  // UNREACHABLE("not implemented");
+  latch_.lock();
+  auto index = IndexOf(key);
+  if (index >= dir_.size()) {
+    latch_.unlock();
+    return false;
+  }
+  dir_[index]->Find(key, value);
+  latch_.unlock();
+  return true;
 }
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Remove(const K &key) -> bool {
-  UNREACHABLE("not implemented");
+  // UNREACHABLE("not implemented");
+  latch_.lock();
+  auto index = IndexOf(key);
+  if (index >= dir_.size()) {
+    latch_.unlock();
+    return false;
+  }
+  dir_[index]->Remove(key);
+  latch_.unlock();
+  return true;
 }
 
 template <typename K, typename V>
