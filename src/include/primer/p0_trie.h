@@ -349,7 +349,7 @@ class Trie {
     std::unique_ptr<TrieNode> *currentNode = &root_;
     std::vector<std::unique_ptr<TrieNode> *> nodes;
     while (index < keyLen) {
-      nodes.emplace_back(currentNode);
+      nodes.push_back(currentNode);
       if (!currentNode->get()->HasChild(key[index])) {
         latch_.WUnlock();
         return false;
@@ -361,7 +361,7 @@ class Trie {
           return false;
         }
         child->get()->SetEndNode(false);
-        nodes.emplace_back(child);
+        nodes.push_back(child);
         break;
       }
       currentNode = child;
