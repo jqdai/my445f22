@@ -19,9 +19,9 @@
 #include <utility>
 #include <vector>
 
+#include <common/logger.h>
 #include "common/exception.h"
 #include "common/rwlatch.h"
-#include <common/logger.h>
 
 namespace bustub {
 
@@ -51,10 +51,10 @@ class TrieNode {
    *
    * @param other_trie_node Old trie node.
    */
-  TrieNode(TrieNode &&other_trie_node) noexcept :
-    key_char_(other_trie_node.key_char_), 
-    is_end_(other_trie_node.is_end_), 
-    children_(std::move(other_trie_node.children_)) {}
+  TrieNode(TrieNode &&other_trie_node) noexcept
+      : key_char_(other_trie_node.key_char_),
+        is_end_(other_trie_node.is_end_),
+        children_(std::move(other_trie_node.children_)) {}
 
   /**
    * @brief Destroy the TrieNode object.
@@ -148,7 +148,8 @@ class TrieNode {
    *
    * @param key_char Key char of child node to be removed
    */
-  void RemoveChildNode(char key_char) {;
+  void RemoveChildNode(char key_char) {
+    ;
     if (!HasChildren()) return;
     if (!HasChild(key_char)) return;
     children_.erase(key_char);
@@ -202,7 +203,7 @@ class TrieNodeWithValue : public TrieNode {
    * @param trieNode TrieNode whose data is to be moved to TrieNodeWithValue
    * @param value
    */
-  TrieNodeWithValue(TrieNode &&trieNode, T value) : TrieNode(std::move(trieNode)){
+  TrieNodeWithValue(TrieNode &&trieNode, T value) : TrieNode(std::move(trieNode)) {
     value_ = value;
     is_end_ = true;
   }
@@ -256,9 +257,7 @@ class Trie {
    * @brief Construct a new Trie object. Initialize the root node with '\0'
    * character.
    */
-  Trie() {
-    root_ = std::make_unique<TrieNode>('\0');
-  }
+  Trie() { root_ = std::make_unique<TrieNode>('\0'); }
 
   /**
    * TODO(P0): Add implementation
@@ -292,11 +291,11 @@ class Trie {
     size_t keyLen = key.size();
     size_t index = 0;
     latch_.WLock();
-    std::unique_ptr<TrieNode>* currentNode = &root_;
+    std::unique_ptr<TrieNode> *currentNode = &root_;
     while (index < keyLen) {
       if (index == keyLen - 1) {
         if (currentNode->get()->HasChild(key[index])) {
-          std::unique_ptr<TrieNode>* nextNode = currentNode->get()->GetChildNode(key[index]);
+          std::unique_ptr<TrieNode> *nextNode = currentNode->get()->GetChildNode(key[index]);
           if ((*nextNode)->IsEndNode()) {
             latch_.WUnlock();
             return false;
@@ -306,7 +305,8 @@ class Trie {
           latch_.WUnlock();
           return true;
         } else {
-          currentNode = currentNode->get()->InsertChildNode(key[index], std::move(std::make_unique<TrieNodeWithValue<T>>(key[index], value)));
+          currentNode = currentNode->get()->InsertChildNode(
+              key[index], std::move(std::make_unique<TrieNodeWithValue<T>>(key[index], value)));
           latch_.WUnlock();
           return true;
         }
@@ -314,9 +314,10 @@ class Trie {
         if (currentNode->get()->HasChild(key[index])) {
           currentNode = currentNode->get()->GetChildNode(key[index]);
         } else {
-          currentNode = currentNode->get()->InsertChildNode(key[index], std::move(std::make_unique<TrieNode>(key[index])));
+          currentNode =
+              currentNode->get()->InsertChildNode(key[index], std::make_unique<TrieNode>(key[index]));
         }
-        index ++;
+        index++;
       }
     }
     latch_.WUnlock();
@@ -346,8 +347,8 @@ class Trie {
     size_t keyLen = key.size();
     size_t index = 0;
     latch_.WLock();
-    std::unique_ptr<TrieNode>* currentNode = &root_;
-    std::vector<std::unique_ptr<TrieNode>*> nodes;
+    std::unique_ptr<TrieNode> *currentNode = &root_;
+    std::vector<std::unique_ptr<TrieNode> *> nodes;
     while (index < keyLen) {
       nodes.emplace_back(currentNode);
       if (!currentNode->get()->HasChild(key[index])) {
@@ -357,7 +358,7 @@ class Trie {
       auto child = currentNode->get()->GetChildNode(key[index]);
       if (index == keyLen - 1) {
         if (!child->get()->IsEndNode()) {
-        latch_.WUnlock();
+          latch_.WUnlock();
           return false;
         }
         child->get()->SetEndNode(false);
@@ -365,11 +366,11 @@ class Trie {
         break;
       }
       currentNode = child;
-      index ++;
+      index++;
     }
-    for (size_t i = keyLen; i >= 1; i --) {
+    for (size_t i = keyLen; i >= 1; i--) {
       if (!nodes[i]->get()->HasChildren() && !nodes[i]->get()->IsEndNode()) {
-        nodes[i-1]->get()->RemoveChildNode(nodes[i]->get()->GetKeyChar());
+        nodes[i - 1]->get()->RemoveChildNode(nodes[i]->get()->GetKeyChar());
       } else {
         break;
       }
@@ -405,11 +406,11 @@ class Trie {
     size_t keyLen = key.size();
     size_t index = 0;
     latch_.RLock();
-    std::unique_ptr<TrieNode>* currentNode = &root_;
+    std::unique_ptr<TrieNode> *currentNode = &root_;
     while (index < keyLen) {
       if (index == keyLen - 1) {
         if (currentNode->get()->HasChild(key[index])) {
-          std::unique_ptr<TrieNode>* child = (currentNode->get()->GetChildNode(key[index]));
+          std::unique_ptr<TrieNode> *child = (currentNode->get()->GetChildNode(key[index]));
           if ((*child)->IsEndNode()) {
             auto tr = dynamic_cast<TrieNodeWithValue<T> *>(child->get());
             if (tr != nullptr) {
@@ -424,7 +425,7 @@ class Trie {
         return {};
       } else if (currentNode->get()->HasChild(key[index])) {
         currentNode = currentNode->get()->GetChildNode(key[index]);
-        index ++;
+        index++;
       } else {
         *success = false;
         latch_.RUnlock();
