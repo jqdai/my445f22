@@ -314,8 +314,7 @@ class Trie {
         if (currentNode->get()->HasChild(key[index])) {
           currentNode = currentNode->get()->GetChildNode(key[index]);
         } else {
-          currentNode =
-              currentNode->get()->InsertChildNode(key[index], std::make_unique<TrieNode>(key[index]));
+          currentNode = currentNode->get()->InsertChildNode(key[index], std::make_unique<TrieNode>(key[index]));
         }
         index++;
       }
