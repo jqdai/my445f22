@@ -53,6 +53,8 @@ class BufferPoolManagerInstance : public BufferPoolManager {
   auto GetPages() -> Page * { return pages_; }
 
  protected:
+  
+  auto GetAvailableFrame(frame_id_t *outcomeframeid) -> bool;
   /**
    * TODO(P1): Add implementation
    *

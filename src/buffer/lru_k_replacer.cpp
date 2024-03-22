@@ -70,15 +70,12 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id) {
 
 void LRUKReplacer::SetEvictable(frame_id_t frame_id, bool set_evictable) {
     BUSTUB_ASSERT(frame_id <= (int)replacer_size_, "abort");
-    if (evictable.find(frame_id) == evictable.end()) {
-        return;
-    }
-    if (set_evictable && !evictable.at(frame_id)) {
-        curr_size_ ++;
-        evictable.at(frame_id) = true;
-    } else if (!set_evictable && evictable.at(frame_id)) {
-        curr_size_ --;
-        evictable.at(frame_id) = false;
+    if(!evictable[frame_id] && set_evictable) {
+        evictable[frame_id] = true;
+        curr_size_++;
+    } else if (evictable[frame_id] && !set_evictable) {
+        evictable[frame_id] = false;
+        curr_size_--;
     }
 }
 
